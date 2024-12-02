@@ -31,25 +31,73 @@
         <div class="col mt-4">
             <button id="runButton" class="btn btn-primary">Run Tests</button>
         </div>
-    </div>
-    <div class="console mt-4">
-        <pre class="logs" id="testLogs"></pre>
-    </div>
+        <div class="col mt-4">
+            <div class="mb-3">
+                <input type="checkbox" class="form-check-input" id="verbose">
+                <label class="form-label" for="verbose">Verbose</label>
 
-</div>
-<script>
-    var runButton = document.getElementById('runButton');
-    runButton.addEventListener('click', function () {
-        fetch("/tests/run", {method: 'GET'})
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('testLogs').innerHTML = data.logs;
+            </div>
+            <div class="mb-3">
+                <input type="checkbox" class="form-check-input" id="report">
+                <label class="form-check-label" for="report">Report</label>
+            </div>
+
+            <div class="mb-3">
+                <label for="dropdown">Select a test</label>
+                <select class="form-select" multiple id="dropdown">
+                    {% for test in tests %}
+                    <option value="{{ test }}">{{ test }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+        </div>
+        <div class="console mt-4">
+            <pre class="logs" id="testLogs"></pre>
+        </div>
+
+    </div>
+    <script>
+        var data = {
+            verbose: document.getElementById('verbose').checked,
+            report: document.getElementById('report').checked,
+            tests: []
+        };
+        var dropdown = document.getElementById('dropdown');
+        var verboseButton = document.getElementById('verbose');
+        var reportButton = document.getElementById('report');
+        verboseButton.addEventListener('change', function () {
+            data.verbose = verboseButton.checked;
+        });
+        reportButton.addEventListener('change', function () {
+            data.report = reportButton.checked;
+        });
+
+        dropdown.addEventListener('change', function () {
+            data.tests = Array.from(dropdown.selectedOptions).map(option => option.value);
+        });
+
+        var runButton = document.getElementById('runButton');
+        runButton.addEventListener('click', function () {
+            fetch("/tests/run", {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body:
+                    JSON.stringify(data)
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    });
-</script>
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('testLogs').innerHTML = data.logs;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+    </script>
 </body>
 
 </html>

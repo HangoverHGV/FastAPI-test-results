@@ -61,3 +61,33 @@ def test_create_recipe(client_with_db):
         "difficulty": 1,
         "servings": 4
     }
+
+def test_read_recipe(client_with_db):
+    response = client_with_db.get("/recipe/1")
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 1,
+        "title": "Test Recipe",
+        "description": "This is a test recipe",
+        "ingredients": "ingredient1, ingredient2",
+        "steps": "step1 step2",
+        "time": 30,
+        "difficulty": 1,
+        "servings": 4
+    }
+
+def test_read_all_recipes(client_with_db):
+    response = client_with_db.get("/recipe")
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": 1,
+            "title": "Test Recipe",
+            "description": "This is a test recipe",
+            "ingredients": "ingredient1, ingredient2",
+            "steps": "step1 step2",
+            "time": 30,
+            "difficulty": 1,
+            "servings": 4
+        }
+    ]

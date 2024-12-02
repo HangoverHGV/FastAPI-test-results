@@ -1,30 +1,63 @@
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from fastapi import BackgroundTasks
 import os
+import glob
 import subprocess
+from pydantic import BaseModel
+from typing import List
 from ansi2html import Ansi2HTMLConverter
 
+class TestOptions(BaseModel):
+    verbose: bool
+    report: bool
+    tests: List[str]
 
 router = APIRouter()
 template_path = os.path.join(os.path.dirname(__file__), "templates")
 
 templates = Jinja2Templates(directory=template_path)
 
-def run_test():
-    result = subprocess.run(["pytest", "tests", "--color=yes"], capture_output=True, text=True)
+def run_test(options: dict):
+    command = ["pytest"]
+    if options.get("verbose"):
+        command.append("-vv")
+    if options.get("report"):
+        subprocess.run(["pytest", "--html=report.html", "--self-contained-html"])
+
+    command.append("tests")
+    find_all_tests_in_project()
+
+
+    command.append("--color=yes")
+    result = subprocess.run(command, capture_output=True, text=True)
     conv = Ansi2HTMLConverter()
     html_logs = conv.convert(result.stdout)
     return html_logs
 
+def find_all_tests_in_project():
+    test_files = glob.glob("tests/**/*test*.py", recursive=True)
+    tests = []
+    for file in test_files:
+        with open(file, "r") as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.strip().startswith("def test_"):
+                    function_name = line.split("(")[0].replace("def ", "").strip()
+                    tests.append(f'{file}{function_name}')
+    print(tests)
+    return tests
+
 @router.get("/", response_class=HTMLResponse)
 def tests(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "logs": ""}, media_type="text/html")
 
-@router.get("/run")
-def run_background(background_tasks: BackgroundTasks):
-    logs = run_test()
+
+    return templates.TemplateResponse("index.html", {"request": request, "tests": find_all_tests_in_project()}, media_type="text/html")
+
+@router.post("/run")
+def run_background(options: TestOptions):
+    data = options.model_dump()
+    logs = run_test(data)
     return {"logs": logs}
 
 
