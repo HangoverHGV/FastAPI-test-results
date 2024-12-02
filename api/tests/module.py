@@ -24,9 +24,9 @@ def run_test(options: dict):
         command.append("-vv")
     if options.get("report"):
         subprocess.run(["pytest", "--html=report.html", "--self-contained-html"])
-
+    if len(options.get("tests")) > 0:
+        command.extend(options.get("tests"))
     command.append("tests")
-    find_all_tests_in_project()
 
 
     command.append("--color=yes")
@@ -44,8 +44,8 @@ def find_all_tests_in_project():
             for line in lines:
                 if line.strip().startswith("def test_"):
                     function_name = line.split("(")[0].replace("def ", "").strip()
-                    tests.append(f'{file}{function_name}')
-    print(tests)
+                    tests.append(f'{file}::{function_name}')
+
     return tests
 
 @router.get("/", response_class=HTMLResponse)
