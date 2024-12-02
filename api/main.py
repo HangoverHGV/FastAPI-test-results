@@ -4,10 +4,13 @@ from models import Recipe
 from schema import RecipeModel
 from database import SessionLocal, engine
 from wait_for_db import wait_for_db
+from tests.module import router
 
 wait_for_db()
 
 app = FastAPI()
+
+app.include_router(router, prefix="/tests")
 
 models.Base.metadata.create_all(bind=engine)
 

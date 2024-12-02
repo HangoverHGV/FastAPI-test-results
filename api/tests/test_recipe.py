@@ -50,7 +50,7 @@ def test_create_recipe(client_with_db):
             "servings": 4
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json() == {
         "id": 1,
         "title": "Test Recipe",
