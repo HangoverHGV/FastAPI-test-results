@@ -3,10 +3,14 @@ import models
 from models import Recipe
 from schema import RecipeModel
 from database import SessionLocal, engine
+from wait_for_db import wait_for_db
 
+wait_for_db()
 
 app = FastAPI()
+
 models.Base.metadata.create_all(bind=engine)
+
 def get_db():
     db = SessionLocal()
     try:
@@ -14,9 +18,7 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+
 
 @app.get("/recipe", tags=["recipe"])
 def read_recipe(db: SessionLocal = Depends(get_db)):
