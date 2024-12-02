@@ -49,9 +49,7 @@ def find_all_tests_in_project():
     return tests
 
 @router.get("/", response_class=HTMLResponse)
-def tests(request: Request):
-
-
+def output_tests(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "tests": find_all_tests_in_project()}, media_type="text/html")
 
 @router.post("/run")
